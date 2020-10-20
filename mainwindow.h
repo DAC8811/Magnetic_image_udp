@@ -17,7 +17,15 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_sendBtn_clicked();
+    void on_transStartBtn_clicked();
+
+    void on_resetBtn_clicked();
+
+    void on_recorrectBtn_clicked();
+
+    void on_transStopBtn_clicked();
+    
+    void on_connectBtn_clicked();
 
 private:
     Ui::MainWindow *ui;

@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "scannerctr.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,7 +22,27 @@ MainWindow::~MainWindow()
 }
 
 
-void MainWindow::on_sendBtn_clicked()
+void MainWindow::on_transStartBtn_clicked()
 {
-    scanner->order_write("hello world");
+    scanner->state = TRANSMITTING;
+}
+
+void MainWindow::on_resetBtn_clicked()
+{
+    scanner->state = RESET;
+}
+
+void MainWindow::on_recorrectBtn_clicked()
+{
+    scanner->state = RECORRECT;
+}
+
+void MainWindow::on_transStopBtn_clicked()
+{
+    scanner->state = STANDBY;
+}
+
+void MainWindow::on_connectBtn_clicked()
+{
+    scanner->state = CONNECT;
 }
