@@ -9,7 +9,7 @@
 #define REMOTE_ADDRES "192.168.0.10"
 #define LOCAL_ADDRES "192.168.0.9"
 
-#define IMAGE_SIZE 792
+#define LINE_SIZE 792
 #define HEADER_LENGTH 8
 
 //head宏定义----------------------------------------------------------------------------------------------------------------------

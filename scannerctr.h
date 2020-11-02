@@ -4,6 +4,7 @@
 #include <QThread>
 #include <QUdpSocket>
 #include "timecount.h"
+#include "imgoperator.h"
 
 namespace Ui { class MainWindow; }
 
@@ -26,7 +27,7 @@ public:
 
     void order_write(QByteArray* msg);
     void order_receive();
-    bool order_cycle(uint16_t order_type,int msecs);
+    bool order_cycle(uint16_t order_type,int msecs,uint32_t max_lines = 1000);
 
     bool image_receive();
     void image_transmit(int order_msecs,int image_msecs);
@@ -37,15 +38,16 @@ public:
     volatile double timeuse = 0;
 
     volatile STATE state = STANDBY;
-    volatile uint32_t max_lines = 200;
+    volatile uint32_t max_lines = 400;
 
 private:
     void run();
 
     volatile bool thread_running = true;
 
-    QByteArray* packet_data;
-    QByteArray* image_data;
+    QByteArray* packet_data = nullptr;
+    QByteArray* image_data = nullptr;
+    ImgOperator* image = nullptr;
 
 private slots:
 
@@ -54,7 +56,7 @@ private:
     volatile bool time_out = false;
 
     Ui::MainWindow* ui;
-    QUdpSocket* socket;
+    QUdpSocket* socket = nullptr;
 
     TimeCount timecount;
 

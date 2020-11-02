@@ -11,11 +11,15 @@ ScannerCtr::ScannerCtr(Ui::MainWindow* ui):ui(ui)
 //    network_init();
     packet_data = new QByteArray;
     image_data = new QByteArray;
+    image = new ImgOperator(ui);
 }
 
 ScannerCtr::~ScannerCtr(){
 
     socket->close();
+    image->quit();
+    image->wait();
+    delete image;
     delete packet_data;
     delete image_data;
     delete socket;
@@ -33,26 +37,18 @@ bool ScannerCtr::network_init(){
 }
 
 void ScannerCtr::order_write(QByteArray* msg){
-//    if(socket->state()==QAbstractSocket::ConnectedState)
     socket->writeDatagram(msg->data(),msg->size(),QHostAddress(REMOTE_ADDRES),REMOTE_PORT);
 }
 
 void ScannerCtr::order_receive(){
-   // QByteArray* data = new QByteArray;
     packet_data->clear();
     packet_data->resize(socket->bytesAvailable());
     socket->readDatagram(packet_data->data(),packet_data->size());
     ack_header* ack_handler = (ack_header*)packet_data->data();
-    //qDebug()<< ack_handler->head;
-    //qDebug()<<data;
-
-    //delete data;
 }
 
-bool ScannerCtr::order_cycle(uint16_t order_type,int msecs){
-    //QByteArray* data = new QByteArray;
+bool ScannerCtr::order_cycle(uint16_t order_type,int msecs,uint32_t max_lines){
     QByteArray data;
-    //packet_data->clear();
     switch(order_type){
     case IMAGE_REQUEST:{
         image_request_header* header = new image_request_header;
@@ -71,9 +67,6 @@ bool ScannerCtr::order_cycle(uint16_t order_type,int msecs){
         }
     }
     order_write(&data);
-
-    //delete data;
-
     if(socket->waitForReadyRead(msecs)){
         order_receive();
         return true;
@@ -94,11 +87,11 @@ bool ScannerCtr::order_cycle(uint16_t order_type,int msecs){
 //}
 
 void ScannerCtr::image_transmit(int order_msecs,int image_msecs){
-    //QByteArray* image_data = new QByteArray;
+    uint32_t max_line = max_lines;
     image_data->clear();
-    image_data->resize(max_lines*IMAGE_SIZE);
+    image_data->resize(max_line*LINE_SIZE);
     bool finish = false;
-    if(!order_cycle(IMAGE_REQUEST,order_msecs)){
+    if(!order_cycle(IMAGE_REQUEST,order_msecs,max_line)){
         //qDebug()<<"transmit order send failed";
         return;
     }
@@ -118,36 +111,29 @@ void ScannerCtr::image_transmit(int order_msecs,int image_msecs){
     }
     if(finish){
         qDebug()<<"image receive finished";
+        image->wait();
+        image->setData(image_data->data(),max_line);
+        image->start();
     }
     //delete image_data;
 }
 
 bool ScannerCtr::image_receive(){
-//    QByteArray* data = new QByteArray;
-//    QByteArray data;
     packet_data->clear();
     packet_data->resize(socket->bytesAvailable());
     socket->readDatagram(packet_data->data(),packet_data->size());
     image_recive_header* image_handler = (image_recive_header*)packet_data->data();
     if(image_handler->head!=IMAGE_TRANSMIT){
-        //delete data;
         return false;
     }
     else if(image_handler->flag==FLAG_HEAD||image_handler->flag==FLAG_MID){
-        memcpy(image_data->data()+image_handler->seq_line*IMAGE_SIZE,packet_data->data()+HEADER_LENGTH,IMAGE_SIZE);
-        //qDebug()<<image_handler->seq_line;
-        //image_ack(ERROR_NORMAL);
-        //delete data;
+        memcpy(image_data->data()+image_handler->seq_line*LINE_SIZE,packet_data->data()+HEADER_LENGTH,LINE_SIZE);
         return false;
     }
     else if(image_handler->flag==FLAG_TAIL){
-        memcpy(image_data->data()+image_handler->seq_line*IMAGE_SIZE,packet_data->data()+HEADER_LENGTH,IMAGE_SIZE);
-        //qDebug()<<image_handler->seq_line;
-        //image_ack(ERROR_NORMAL);
-        //delete data;
+        memcpy(image_data->data()+image_handler->seq_line*LINE_SIZE,packet_data->data()+HEADER_LENGTH,LINE_SIZE);
         return true;
     }
-    //delete data;
     return false;
 }
 
@@ -170,8 +156,16 @@ void ScannerCtr::run(){
 //                i++;
                 break;
             }
-            case RESET:break;
-            case RECORRECT:break;
+            case RESET:{
+                while(!order_cycle(ORDER_RESET,500));
+                state = STANDBY;
+                break;
+            }
+        case RECORRECT:{
+                while(!order_cycle(ORDER_RECORRECT,500));
+                state = STANDBY;
+                break;
+            }
             case CONNECT:{
                 while(!order_cycle(ORDER_CONNECT,500));
                 state = STANDBY;

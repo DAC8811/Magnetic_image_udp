@@ -1,12 +1,15 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "scannerctr.h"
+#include <QIntValidator>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    QIntValidator* v = new QIntValidator(2, 2000, this);//设置最大行数的输入范围
+    ui->lineEdit->setValidator(v);
     scanner = new ScannerCtr(ui);
     scanner->start();
     //scanner->init();
@@ -45,4 +48,9 @@ void MainWindow::on_transStopBtn_clicked()
 void MainWindow::on_connectBtn_clicked()
 {
     scanner->state = CONNECT;
+}
+
+void MainWindow::on_lineConfirmBtn_clicked()
+{
+    scanner->max_lines = ui->lineEdit->text().toUInt();
 }
