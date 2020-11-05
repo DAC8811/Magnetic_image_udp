@@ -5,6 +5,7 @@
 #include <QUdpSocket>
 #include "timecount.h"
 #include "imgoperator.h"
+#include <QMutex>
 
 namespace Ui { class MainWindow; }
 
@@ -39,6 +40,8 @@ public:
 
     volatile STATE state = STANDBY;
     volatile uint32_t max_lines = 400;
+    QMutex mutex;
+    ImgOperator* image = nullptr;
 
 private:
     void run();
@@ -47,9 +50,12 @@ private:
 
     QByteArray* packet_data = nullptr;
     QByteArray* image_data = nullptr;
-    ImgOperator* image = nullptr;
+
+
 
 private slots:
+    void set_maxlines(int maxlines);
+    void set_state(int);
 
 private:
 

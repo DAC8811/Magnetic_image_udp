@@ -12,6 +12,7 @@ ScannerCtr::ScannerCtr(Ui::MainWindow* ui):ui(ui)
     packet_data = new QByteArray;
     image_data = new QByteArray;
     image = new ImgOperator(ui);
+    //connect(this,SIGNAL(send_image_data(const char* ,uint32_t)),image,SLOT(setData(const char* ,uint32_t)));
 }
 
 ScannerCtr::~ScannerCtr(){
@@ -111,9 +112,11 @@ void ScannerCtr::image_transmit(int order_msecs,int image_msecs){
     }
     if(finish){
         qDebug()<<"image receive finished";
-        image->wait();
+       // image->wait();
         image->setData(image_data->data(),max_line);
+//      emit send_image_data(image_data->data(),max_line);
         image->start();
+        image->wait();
     }
     //delete image_data;
 }
@@ -152,7 +155,9 @@ void ScannerCtr::run(){
                 break;
             }
             case TRANSMITTING:{
+//                mutex.lock();
                 image_transmit(5,1000);
+//                mutex.unlock();
 //                i++;
                 break;
             }
@@ -188,3 +193,6 @@ void ScannerCtr::run(){
 
 void ScannerCtr::thread_exit(){ thread_running = false;}
 
+void ScannerCtr::set_maxlines(int maxlines){max_lines = maxlines;}
+
+void ScannerCtr::set_state(int state){this->state = STATE(state);}

@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "scannerctr.h"
 
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -29,8 +30,15 @@ private slots:
 
     void on_lineConfirmBtn_clicked();
 
+    void show_img(QImage img);
+
 private:
     Ui::MainWindow *ui;
     ScannerCtr* scanner;
+
+signals:
+    void send_maxlines(int maxlines);
+    void send_state(int);
+
 };
 #endif // MAINWINDOW_H

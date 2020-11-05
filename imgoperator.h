@@ -2,6 +2,7 @@
 #define IMGOPERATOR_H
 
 #include <QThread>
+#include <QImage>
 
 namespace Ui { class MainWindow; }
 
@@ -20,6 +21,12 @@ private:
     QImage* img = nullptr;
     Ui::MainWindow* ui;
     uint32_t length;
+
+
+
+signals:
+    void send_img(QImage);
+
 };
 
 
