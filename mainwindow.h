@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -32,6 +32,10 @@ private slots:
 
     void show_img(QImage img);
 
+    void show_string(QString info);
+
+    void on_clearInfoBtn_clicked();
+
 private:
     Ui::MainWindow *ui;
     ScannerCtr* scanner;
@@ -39,6 +43,7 @@ private:
 signals:
     void send_maxlines(int maxlines);
     void send_state(int);
+
 
 };
 #endif // MAINWINDOW_H

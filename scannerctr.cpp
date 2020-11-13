@@ -1,9 +1,11 @@
+﻿
 #include "scannerctr.h"
 #include <QUdpSocket>
 #include <QDebug>
 #include "parameters.h"
 #include "timecount.h"
 #include <opencv2/opencv.hpp>
+#include <QStringLiteral>
 
 
 ScannerCtr::ScannerCtr(Ui::MainWindow* ui):ui(ui)
@@ -70,10 +72,32 @@ bool ScannerCtr::order_cycle(uint16_t order_type,int msecs,uint32_t max_lines){
     order_write(&data);
     if(socket->waitForReadyRead(msecs)){
         order_receive();
+        switch(order_type){
+        case IMAGE_REQUEST:break;
+        case ORDER_CONNECT:{
+            emit send_info(QString::fromLocal8Bit("连接成功"));
+            break;
+        }
+        default:{
+            emit send_info(QString::fromLocal8Bit("指令发送成功"));
+            break;
+        }
+        }
         return true;
     }
     else{
         qDebug()<<"order timeOut";
+        switch(order_type){
+        case IMAGE_REQUEST:break;
+        case ORDER_CONNECT:{
+            emit send_info(QString::fromLocal8Bit("尝试连接失败,重试..."));
+            break;
+        }
+        default:{
+            emit send_info(QString::fromLocal8Bit("指令发送失败,重试..."));
+            break;
+        }
+        }
         return false;
     }
 }
@@ -92,12 +116,7 @@ void ScannerCtr::image_transmit(int order_msecs,int image_msecs){
     image_data->clear();
     image_data->resize(max_line*LINE_SIZE);
     bool finish = false;
-    if(!order_cycle(IMAGE_REQUEST,order_msecs,max_line)){
-        //qDebug()<<"transmit order send failed";
-        return;
-    }
-//    else
-//        qDebug()<<"transmit order send succeed";
+    while(!order_cycle(IMAGE_REQUEST,order_msecs,max_line));
     while(1){
         if(socket->waitForReadyRead(image_msecs)){
             if(image_receive()){
@@ -150,15 +169,16 @@ void ScannerCtr::run(){
 //        }
         switch(state){
             case STANDBY:{
-                usleep(1000);
+                //usleep(1000);
                 //order_cycle(ORDER_CONNECT,1000);
                 break;
             }
             case TRANSMITTING:{
 //                mutex.lock();
-                image_transmit(5,1000);
+                image_transmit(5,1000000);
 //                mutex.unlock();
 //                i++;
+                state = STANDBY;
                 break;
             }
             case RESET:{

@@ -51,7 +51,8 @@ private:
     QByteArray* packet_data = nullptr;
     QByteArray* image_data = nullptr;
 
-
+signals:
+    void send_info(QString);
 
 private slots:
     void set_maxlines(int maxlines);
